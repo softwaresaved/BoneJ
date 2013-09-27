@@ -1,0 +1,251 @@
+<?xml version="1.0"?>
+<!--
+ Copyright 2013 Michael Doube, Mike Jackson 
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<project basedir="." default="deploy" name="BoneJ_">
+    <description>
+    BoneJ ImageJ plug-in build file.
+
+    See ant.properties for required properties, including location
+    of third-party dependencies required to build and test BoneJ.
+    </description>
+
+    <!-- Load ant.properties -->
+    <property file="${basedir}/ant.properties"/>
+    <property name="bonej.dir" value="${basedir}"/>
+    <!-- Source directories -->
+    <property name="src.dir" value="${bonej.dir}/src"/>
+    <property name="test.dir" value="${bonej.dir}/test"/>
+    <!-- Build directories -->
+    <property name="build.dir" value="${bonej.dir}"/>
+    <property name="bin.dir" value="${build.dir}/bin"/>
+    <property name="lib.dir" value="${build.dir}/lib"/>
+    <property name="javadoc.dir" value="${build.dir}/javadoc"/>
+    <property name="all.javadoc.dir" value="${build.dir}/alljavadoc"/>
+    <property name="test.bin.dir" value="${build.dir}/test"/>
+    <property name="reports.dir" value="${build.dir}/reports"/>
+    <property name="reports.xml.dir" value="${reports.dir}/xml"/>
+    <property name="reports.html.dir" value="${reports.dir}/html"/>
+    <!-- JAR names -->
+    <property name="jar.name" value="${product.name}.jar"/>
+    <property name="release.jar.name" value="${product.name}_.jar"/>
+    <!-- JAR manifest -->
+    <property name="manifest" value="${build.dir}/MANIFEST.MF"/>
+    <!-- Build control -->
+    <property name="java.debug" value="on"/>
+    <property name="java.deprecation" value="on"/>
+    <property name="test.filter" value="**/*Test.java"/>
+    <property name="max.memory" value="2g"/>
+
+    <path id="src.classpath">
+        <pathelement path="${bin.dir}"/>
+        <fileset dir="${java3d.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <pathelement location="${imagej.jar}"/>
+        <pathelement location="${3dviewer.jar}"/>
+        <pathelement location="${imglib.jar}"/>
+        <pathelement location="${hamcrest.jar}"/>
+    </path>
+
+    <path id="test.classpath">
+        <pathelement path="${test.bin.dir}"/>
+        <path refid="src.classpath"/>
+        <pathelement location="${junit.jar}"/>
+    </path>
+
+    <target name="clean" description="Clean build artefacts">
+        <delete dir="${build.dir}" quiet="true"/>
+    </target>
+
+    <target name="init" description="Make build directory">
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <target name="compile" description="Compile source code"
+            depends="init">
+        <mkdir dir="${bin.dir}"/>
+        <javac srcdir="${src.dir}" 
+               destdir="${bin.dir}" 
+               debug="${java.debug}" 
+               deprecation="${java.deprecation}" 
+               classpathref="src.classpath" 
+               includeantruntime="false">
+            <!--
+               Above suppresses warnings of form:
+               warning: 'includeantruntime' was not set
+            -->
+            <include name="**/*.java"/>
+            <!--
+              Suppress errors due to unmappable characters e.g.
+              src/org/doube/bonej/pqct/utils/ResultsWriter.java:119
+              error: unmappable character for encoding UTF8
+              Such characters should be expressed in the form \uNNNN.
+              See http://stackoverflow.com/questions/464874/unmappable-character-for-encoding-warning-in-java.
+            -->
+            <compilerarg line="-encoding ISO-8859-1"/>
+        </javac>
+    </target>
+
+    <target name="compiletests" description="Compile tests" 
+            depends="compile">
+        <mkdir dir="${test.bin.dir}"/>
+        <javac srcdir="${test.dir}" 
+               destdir="${test.bin.dir}" 
+               debug="${java.debug}" 
+               deprecation="${java.deprecation}" 
+               classpathref="test.classpath" 
+               includeantruntime="false">
+            <include name="**/*.java"/>
+            <compilerarg line="-encoding ISO-8859-1"/>
+        </javac>
+    </target>
+
+    <target name="test" description="Run tests and output XML reports" 
+            depends="compiletests">
+        <mkdir dir="${reports.xml.dir}"/>
+        <junit printsummary="yes" 
+               haltonfailure="no" 
+               maxmemory="${max.memory}">
+            <classpath>
+                <path refid="test.classpath"/>
+            </classpath>
+            <formatter type="xml"/>
+            <batchtest fork="yes" todir="${reports.xml.dir}">
+                <fileset dir="${test.dir}">
+                    <include name="${test.filter}"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="reportashtml" description="Create HTML reports from XML"
+            depends="test">
+        <mkdir dir="${reports.html.dir}"/>
+        <junitreport todir="${reports.xml.dir}">
+            <fileset dir="${reports.xml.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.html.dir}"/>
+        </junitreport>
+    </target>
+
+    <target name="createmanifest" description="Create JAR MANIFEST.MF"
+            depends="init">
+        <tstamp>
+            <format property="build.time" pattern="EEE d MMMM yyyy HH:mm"/>
+        </tstamp>
+        <manifest file="${manifest}">
+            <attribute name="Built-By" value="${user.name}"/>
+            <attribute name="Built-At" value="${build.time}"/>
+            <section name="common">
+                <attribute name="WWW" value="${website}"/>
+                <attribute name="Licence" value="${licence}"/>
+                <attribute name="Copyright" value="${copyright}"/>
+                <attribute name="Specification-Title" 
+                           value="${specification.title}"/>
+                <attribute name="Specification-Version" 
+                           value="${build.time}"/>
+                <attribute name="Specification-Vendor" 
+                           value="${specification.vendor}"/>
+                <attribute name="Implementation-Title" 
+                           value="${implementation.title}"/>
+                <attribute name="Implementation-Version" 
+                           value="${build.time}"/>
+                <attribute name="Implementation-Vendor"
+                           value="${implementation.vendor}"/>
+            </section>
+        </manifest>
+    </target>
+
+    <target name="javadocs" description="Create JavaDoc for source">
+        <mkdir dir="${javadoc.dir}"/>
+        <javadoc defaultexcludes="yes" 
+                 destdir="${javadoc.dir}" 
+                 author="true" version="true" 
+                 use="true" 
+                 windowtitle="${product.name}" 
+                 classpathref="src.classpath" 
+                 sourcepath="${src.dir}"/>
+    </target>
+
+    <target name="alljavadocs" 
+            description="Create JavaDoc for source and tests">
+        <mkdir dir="${all.javadoc.dir}"/>
+        <javadoc defaultexcludes="yes" 
+                 destdir="${all.javadoc.dir}" 
+                 author="true" version="true" 
+                 use="true" 
+                 windowtitle="${product.name}" 
+                 classpathref="src.classpath">
+            <fileset dir="${src.dir}"/>
+            <fileset dir="${test.dir}"/>
+        </javadoc>
+    </target>
+
+    <target name="jar" description="Create JAR" 
+            depends="compile, createmanifest">
+        <mkdir dir="${lib.dir}"/>
+        <jar destfile="${lib.dir}/${jar.name}" 
+             basedir="${bin.dir}" 
+             manifest="${manifest}" 
+             whenmanifestonly="skip"/>
+    </target>
+
+    <target name="release" description="Create release JAR" 
+            depends="compile, createmanifest">
+        <mkdir dir="${lib.dir}"/>
+        <jar destfile="${lib.dir}/${release.jar.name}" 
+             basedir="${bin.dir}" 
+             manifest="${manifest}" 
+             whenmanifestonly="skip">
+            <fileset dir="${src.dir}" includes="**/*.java"/>
+            <fileset dir="${src.dir}" includes="plugins.config"/>
+            <fileset dir="${bin.dir}"/>
+        </jar>
+    </target>
+
+    <target name="info" description="Print information">
+        <echo message="Run 'ant -p' for a list of commands"/>
+    </target>
+
+    <target name="buildandtest" 
+            description="Compile, run tests, create HTML report"
+            depends="clean, test, reportashtml"/>
+
+    <target name="testandrelease" 
+            description="Compile, run tests, create release JAR"
+            depends="clean, test, release"/>
+
+    <target name="deployimagej" description="Deploy to ImageJ"
+            depends="release">
+        <copy file="${lib.dir}/${release.jar.name}" 
+              location="${imagej.plugins.dir}"/>
+    </target>
+
+    <target name="deployfiji" description="Deploy to Fiji"
+            depends="release">
+        <copy file="${lib.dir}/${release.jar.name}" 
+              location="${fiji.plugins.dir}"/>
+    </target>
+
+    <target name="deploy" description="Deploy to both ImageJ and Fiji"
+            depends="deployimagej, deployfiji"/>
+
+    <target name="all" 
+            description="Compile, run tests, create HTML report, JAR, create release JAR, create JavaDoc"
+            depends="clean, test, reportashtml, jar, release, alljavadocs"/>
+</project>
