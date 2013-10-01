@@ -17,6 +17,9 @@ Java JDK
 http://www.oracle.com/technetwork/java/javase/overview/index.html
 http://www.oracle.com/technetwork/java/javase/downloads/index.html
 
+http://openjdk.java.net/
+http://openjdk.java.net/install/
+
 Make sure the JDK bin/ directory is in your PATH.
 
 Make sure JAVA_HOME is set to the Java JDK directory e.g.
@@ -94,9 +97,20 @@ It's unclear why this problem does not occur within Eclipse.
 Tested platforms and versions
 =============================
 
-Tested on Windows 7 Enterprise with the following versions:
+Tested on Windows 7 Enterprise with:
 
-Java JDK 1.7.0_21 with source and target set for Java 1.6 (via ant.properties imagej.java.version) for consistency with ImageJ 1.47.
+Oracle Java JDK 1.7.0_21 with source and target set for Java 1.6 (via ant.properties imagej.java.version) for consistency with ImageJ 1.47.
+Java3D 1.5.2
+ImageJ 1.47
+ImageJ 3D Viewer - bundled with ImageJ 1.47
+Apache ANT 1.9.2
+JUnit 4.11
+Hamcrest Core 1.3
+Imglib 1 2.0.0
+
+Tested on Ubuntu 12.10 with:
+
+OpenJDK 1.6.0_27
 Java3D 1.5.2
 ImageJ 1.47
 ImageJ 3D Viewer - bundled with ImageJ 1.47
