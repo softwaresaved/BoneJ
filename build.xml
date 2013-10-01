@@ -80,6 +80,8 @@
         <mkdir dir="${bin.dir}"/>
         <javac srcdir="${src.dir}" 
                destdir="${bin.dir}" 
+               source="${imagej.java.version}"
+               target="${imagej.java.version}"
                debug="${java.debug}" 
                deprecation="${java.deprecation}" 
                classpathref="src.classpath" 
@@ -105,6 +107,8 @@
         <mkdir dir="${test.bin.dir}"/>
         <javac srcdir="${test.dir}" 
                destdir="${test.bin.dir}" 
+               source="${imagej.java.version}"
+               target="${imagej.java.version}"
                debug="${java.debug}" 
                deprecation="${java.deprecation}" 
                classpathref="test.classpath" 
@@ -233,13 +237,13 @@
     <target name="deployimagej" description="Deploy to ImageJ"
             depends="release">
         <copy file="${lib.dir}/${release.jar.name}" 
-              location="${imagej.plugins.dir}"/>
+              todir="${imagej.plugins.dir}"/>
     </target>
 
     <target name="deployfiji" description="Deploy to Fiji"
             depends="release">
         <copy file="${lib.dir}/${release.jar.name}" 
-              location="${fiji.plugins.dir}"/>
+              todir="${fiji.plugins.dir}"/>
     </target>
 
     <target name="deploy" description="Deploy to both ImageJ and Fiji"
